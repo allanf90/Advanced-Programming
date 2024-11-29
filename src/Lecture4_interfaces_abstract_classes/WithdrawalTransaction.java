@@ -5,41 +5,60 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Calendar;
 
 public class WithdrawalTransaction extends BaseTransaction {
-    public WithdrawalTransaction(int amount, @NotNull Calendar date) {
+    private boolean reversed = false;
+    private double shortfall = 0;
+
+    public WithdrawalTransaction(double amount, @NotNull Calendar date) {
         super(amount, date);
     }
 
-    private boolean checkDepositAmount(int amt) {
-        if (amt < 0) {
-            return false;
-        } else {
-            return true;
-        }
+    private boolean checkWithdrawalAmount(double amt) {
+        return amt >= 0;
     }
 
-    // Method to reverse the transaction
-    public boolean reverse() {
-        return true;
-    } // return true if reversal was successful
-
-    // Method to print a transaction receipt or details
+    @Override
     public void printTransactionDetails() {
-        System.out.println("Deposit Trasaction: " + this.toString());
+        System.out.println("Withdrawal Transaction: " + this.toString());
     }
 
-    /*
-    Oportunity for assignment: implementing different form of withdrawal
-     */
-    public void apply(BankAccount ba) {
-        double curr_balance = ba.getBalance();
-        if (curr_balance > getAmount()) {
-            double new_balance = curr_balance - getAmount();
-            ba.setBalance(new_balance);
+    public boolean reverse(BankAccount ba) {
+        if (!reversed) {
+            ba.deposit(getAmount() - shortfall);
+            reversed = true;
+            System.out.println("Transaction reversed successfully.");
+            return true;
+        } else {
+            System.out.println("Transaction has already been reversed.");
+            return false;
         }
     }
 
-    /*
-    Assignment 1 Q3: Write the Reverse method - a method unique to the WithdrawalTransaction Class
-     */
-}
+    @Override
+    public void apply(BankAccount ba) throws InsufficientFundsException {
+        if (!checkWithdrawalAmount(getAmount())) {
+            throw new IllegalArgumentException("Invalid withdrawal amount.");
+        }
 
+        double currentBalance = ba.getBalance();
+        if (currentBalance >= getAmount()) {
+            ba.withdraw(getAmount());
+            System.out.println("Withdrawal of " + getAmount() + " completed.");
+        } else if (currentBalance > 0) {
+            shortfall = getAmount() - currentBalance;
+            ba.withdraw(currentBalance);
+            System.out.println("Partial withdrawal of " + currentBalance + ". Shortfall: " + shortfall);
+        } else {
+            throw new InsufficientFundsException("Insufficient funds for withdrawal.");
+        }
+    }
+
+    public void apply(BankAccount ba, boolean safeMode) {
+        try {
+            apply(ba);
+        } catch (InsufficientFundsException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            System.out.println("Withdrawal attempt completed.");
+        }
+    }
+}
