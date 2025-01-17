@@ -35,3 +35,4 @@ public abstract class BaseTransaction implements TransactionInterface {
 
     public abstract void apply(BankAccount ba) throws InsufficientFundsException;
 }
+
