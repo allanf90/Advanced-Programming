@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Calendar;
 
+
 public class WithdrawalTransaction extends BaseTransaction {
     private boolean reversed = false;
     private double shortfall = 0;
